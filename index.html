@@ -256,7 +256,7 @@ const TROPHIES=[{icon:'🌱',label:'รอบแรก',rounds:1},{icon:'🌿',l
 const DAY_NAMES=['วันที่ 1','วันที่ 2','วันที่ 3','วันที่ 4','วันที่ 5','วันที่ 6','วันที่ 7'];
 const DAY_WEEK=['จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์','อาทิตย์'];
 const TIME_OPTS=[15,20,30,45,60,90,120];
-const TARGET=180, KEY='dhamma_v5';
+const TARGET=180, KEY='dhamma_v3';
 const TYPE_INFO={walk:{icon:'🚶',label:'เดินจงกรม'},sit:{icon:'🧘',label:'นั่งสมาธิ'}};
 
 /* ═══ STATE ═══ */
@@ -278,7 +278,7 @@ function makeRound(num){
 function curRound(){return data.rounds[data.rounds.length-1];}
 function dayTotal(day){return day.sessions.reduce((s,x)=>s+(parseInt(x.minutes)||0),0);}
 function fmtMin(m){m=Math.max(0,Math.round(m));if(m<60)return m+' นาที';const h=Math.floor(m/60),mn=m%60;return h+' ชม.'+(mn?mn+' นาที':'');}
-function isComplete(round){return round.days.every(d=>dayTotal(d)>=TARGET);}
+function isComplete(round){return round.days.every(d=>d.sessions.length>0);}
 
 /* ═══ NAME ═══ */
 function saveName(){
@@ -343,9 +343,9 @@ function renderJournal(){
 }
 function renderDayCard(round,di){
   const day=round.days[di],total=dayTotal(day);
-  const badge=total>=TARGET?`<span class="badge badge-ok">✓ ${fmtMin(total)}</span>`:total>0?`<span class="badge badge-short">${fmtMin(total)}</span>`:`<span class="badge badge-empty">ยังไม่ได้ปฏิบัติ</span>`;
+  const badge=total>0?`<span class="badge badge-ok">✓ ${fmtMin(total)}</span>`:`<span class="badge badge-empty">ยังไม่ได้ปฏิบัติ</span>`;
   const ded=day.dedicated?`<span class="badge badge-ded">🙏 ถวายแล้ว</span>`:'';
-  return`<div class="day-card ${total>=TARGET?'day-ok':''}">
+  return`<div class="day-card ${total>0?'day-ok':''}">
     <div class="day-header" onclick="toggleDay(${di})">
       <div class="day-num ${total>=TARGET?'ok':''}">${di+1}</div>
       <div class="day-info">
@@ -426,13 +426,13 @@ function refreshDayBody(di){
   const day=curRound().days[di],total=dayTotal(day);
   const meta=body.parentElement.querySelector('.day-meta');
   if(meta){
-    const badge=total>=TARGET?`<span class="badge badge-ok">✓ ${fmtMin(total)}</span>`:total>0?`<span class="badge badge-short">${fmtMin(total)}</span>`:`<span class="badge badge-empty">ยังไม่ได้ปฏิบัติ</span>`;
+    const badge=total>0?`<span class="badge badge-ok">✓ ${fmtMin(total)}</span>`:`<span class="badge badge-empty">ยังไม่ได้ปฏิบัติ</span>`;
     const ded=day.dedicated?`<span class="badge badge-ded">🙏 ถวายแล้ว</span>`:'';
     meta.innerHTML=badge+ded;
   }
-  body.parentElement.classList.toggle('day-ok',total>=TARGET);
+  body.parentElement.classList.toggle('day-ok',total>0);
   const num=body.parentElement.querySelector('.day-num');
-  if(num){num.classList.toggle('ok',total>=TARGET);}
+  if(num){num.classList.toggle('ok',total>0);}
   if(timerState[di]&&timerState[di].running){
     if(timerIv[di])clearInterval(timerIv[di]);
     timerIv[di]=setInterval(()=>{
